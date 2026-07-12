@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>目標の階段</title>
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="目標の階段">
+<meta name="theme-color" content="#0b0e1c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;500;700;900&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --s: 190px;
+    --dsize: 1;
+    --bg-top: #0b0e1c;
+    --bg-bot: #171334;
+    --ink: #f2ecff;
+    --ink-dim: #9c96c4;
+    --panel: rgba(255,255,255,0.06);
+    --panel-border: rgba(255,255,255,0.14);
+    --gold: #f4c56a;
+  }
+  @media (max-width: 640px){
+    :root{ --s: 128px; }
+  }
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    background: radial-gradient(120% 100% at 50% -10%, #241c4e 0%, var(--bg-bot) 45%, var(--bg-top) 100%);
+    color: var(--ink);
+    font-family: 'Zen Maru Gothic', 'Zen Kaku Gothic New', sans-serif;
+    overflow-x:hidden;
+  }
+  body{
+    background-image:
+      radial-gradient(1.5px 1.5px at 15% 12%, rgba(255,255,255,.55), transparent),
+      radial-gradient(1.5px 1.5px at 82% 8%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1px 1px at 60% 22%, rgba(255,255,255,.45), transparent),
+      radial-gradient(1.5px 1.5px at 30% 35%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1px 1px at 90% 40%, rgba(255,255,255,.35), transparent),
+      radial-gradient(1.5px 1.5px at 10% 60%, rgba(255,255,255,.3), transparent),
+      radial-gradient(1px 1px at 70% 70%, rgba(255,255,255,.4), transparent),
+      radial-gradient(1.5px 1.5px at 45% 85%, rgba(255,255,255,.25), transparent),
+      radial-gradient(1px 1px at 95% 90%, rgba(255,255,255,.3), transparent);
+    background-repeat: repeat;
+    background-size: 100% 100%;
+    background-attachment: fixed;
+  }
+
+  header{
+    position: sticky; top:0; z-index: 20;
+    padding: 18px 16px 10px;
+    backdrop-filter: blur(10px);
+    background: linear-gradient(to bottom, rgba(11,14,28,0.92), rgba(11,14,28,0.55) 80%, transparent);
+  }
+  .brand{
+    display:flex; align-items:baseline; gap:10px; justify-content:center;
+    margin-bottom: 14px;
+  }
+  .brand .star{ font-size: 18px; filter: drop-shadow(0 0 6px rgba(244,197,106,.8)); }
+  .brand h1{
+    margin:0; font-size: 19px; font-weight:700; letter-spacing:.04em;
+    color: var(--ink);
+  }
+
+  .tabs{
+    display:flex; gap:8px; overflow-x:auto; padding: 2px 2px 8px;
+    scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar{ display:none; }
+  .tab{
+    position:relative;
+    flex: 0 0 auto;
+    display:flex; align-items:center; gap:6px;
+    padding: 9px 14px;
+    border-radius: 999px;
+    border:1px solid var(--panel-border);
+    background: var(--panel);
+    color: var(--ink-dim);
+    font-family:inherit; font-size: 13px; font-weight:500;
+    cursor:pointer;
+    transition: all .2s ease;
+    white-space:nowrap;
+  }
+  .tab.active{
+    color: #1b1430;
+    background: linear-gradient(135deg, #f4c56a, #e88f86);
+    border-color: transparent;
+    font-weight:700;
+    box-shadow: 0 4px 16px rgba(244,197,106,.25);
+  }
+  .tab .close{
+    display:inline-flex; align-items:center; justify-content:center;
+    width:16px; height:16px; border-radius:50%;
+    font-size:11px; line-height:1;
+    background: rgba(0,0,0,0.15);
+    opacity:.7;
+  }
+  .tab .close:hover{ opacity:1; }
+  .tab-add{
+    flex:0 0 auto;
+    width:36px; height:36px;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:50%;
+    border:1px dashed var(--panel-border);
+    background: transparent;
+    color: var(--gold);
+    font-size:18px;
+    cursor:pointer;
+    transition: transform .15s ease, background .15s ease;
+  }
+  .tab-add:hover{ background: rgba(244,197,106,.12); transform: scale(1.06); }
+  .tab-add:active{ transform: scale(.95); }
+
+  main{ padding: 6px 16px 100px; display:flex; flex-direction:column; align-items:center; }
+
+  .page-title{
+    text-align:center;
+    font-size: 14px;
+    color: var(--ink-dim);
+    letter-spacing:.06em;
+    margin: 6px 0 20px;
+    outline:none;
+    min-width: 80px;
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .page-title:focus{ background: rgba(255,255,255,.06); color: var(--ink); }
+
+  .apex{
+    font-size: 22px;
+    margin-bottom: -6px;
+    filter: drop-shadow(0 0 8px rgba(244,197,106,.7));
+  }
+
+  .chain{ display:flex; flex-direction:column; align-items:center; }
+
+  .rung{
+    position:relative;
+    width: calc(var(--s) * var(--dsize) * 1.41421356);
+    height: calc(var(--s) * var(--dsize) * 1.41421356);
+    display:flex; align-items:center; justify-content:center;
+    transition: width .18s ease, height .18s ease;
+  }
+
+  .diamond{
+    width: calc(var(--s) * var(--dsize));
+    height: calc(var(--s) * var(--dsize));
+    transform: rotate(45deg);
+    border: 2px solid var(--dcolor, #8566c9);
+    background: color-mix(in srgb, var(--dcolor, #8566c9) 14%, transparent);
+    box-shadow: 0 0 22px -4px color-mix(in srgb, var(--dcolor, #8566c9) 65%, transparent),
+                inset 0 0 20px -6px color-mix(in srgb, var(--dcolor, #8566c9) 50%, transparent);
+    transition: border-color .25s ease, background .25s ease, box-shadow .25s ease, width .18s ease, height .18s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  .diamond-inner{
+    transform: rotate(-45deg);
+    width: calc(var(--s) * var(--dsize) * 0.64);
+    text-align:center;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+
+  .step-label{
+    font-size: 10px;
+    letter-spacing:.12em;
+    color: var(--dcolor, #cbb8f5);
+    font-weight:700;
+    opacity:.85;
+  }
+
+  .goal-text{
+    outline:none;
+    font-size: 13px;
+    line-height:1.4;
+    color: var(--ink);
+    max-height: calc(var(--s) * var(--dsize) * 0.48);
+    overflow-y:auto;
+    word-break: break-word;
+    font-weight:500;
+    scrollbar-width: thin;
+  }
+  .goal-text:empty:before{
+    content: attr(data-placeholder);
+    color: rgba(242,236,255,0.35);
+    font-weight:400;
+  }
+
+  .char-count{
+    font-size: 9px;
+    color: rgba(242,236,255,0.32);
+    letter-spacing:.03em;
+  }
+  .char-count.near-limit{ color: #ff9d9d; }
+
+  .swatch-btn{
+    position:absolute;
+    right: -6px; top: 50%;
+    transform: translateY(-50%);
+    width: 30px; height:30px;
+    border-radius:50%;
+    border: 2px solid rgba(255,255,255,.5);
+    background: var(--dcolor, #8566c9);
+    cursor:pointer;
+    box-shadow: 0 2px 10px rgba(0,0,0,.4);
+    transition: transform .15s ease;
+    z-index: 5;
+  }
+  .swatch-btn:hover{ transform: translateY(-50%) scale(1.1); }
+  .swatch-btn:active{ transform: translateY(-50%) scale(.95); }
+
+  .palette{
+    position:absolute;
+    right: 30px; top: 50%;
+    transform: translateY(-50%);
+    display:flex; flex-direction:column; gap:10px;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(20,17,45,0.97);
+    border: 1px solid var(--panel-border);
+    box-shadow: 0 10px 30px rgba(0,0,0,.5);
+    z-index: 30;
+    opacity:0; pointer-events:none;
+    transition: opacity .15s ease;
+    width: 190px;
+  }
+  .palette.open{ opacity:1; pointer-events:auto; }
+  .palette .row-label{
+    font-size: 10px; color: var(--ink-dim); letter-spacing:.08em; margin-bottom: 4px;
+  }
+  .palette .dots{ display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .palette .dot{
+    width:20px; height:20px; border-radius:50%;
+    cursor:pointer; border: 2px solid rgba(255,255,255,.25);
+    flex:0 0 auto;
+  }
+  .palette .dot:hover{ border-color: rgba(255,255,255,.7); }
+  .palette input[type=color]{
+    width:22px; height:22px; border:none; background:none; padding:0; cursor:pointer;
+    flex:0 0 auto;
+  }
+  .palette .size-row{ display:flex; flex-direction:column; gap:4px; }
+  .palette input[type=range]{
+    width:100%; accent-color: var(--gold);
+  }
+  .palette .size-value{ font-size:10px; color: var(--ink-dim); text-align:right; }
+
+  .goal-text.vertical{
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    height: calc(var(--s) * var(--dsize) * 0.56);
+    max-height: calc(var(--s) * var(--dsize) * 0.56);
+    max-width: calc(var(--s) * var(--dsize) * 0.64);
+    width: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
+    margin: 0 auto;
+  }
+
+  .toggle-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap: 8px;
+  }
+  .toggle-switch{
+    position:relative;
+    width: 38px; height: 22px;
+    border-radius: 999px;
+    background: rgba(255,255,255,.15);
+    border: 1px solid var(--panel-border);
+    cursor:pointer;
+    flex:0 0 auto;
+    transition: background .2s ease;
+  }
+  .toggle-switch.on{ background: linear-gradient(135deg, #f4c56a, #d480a0); border-color: transparent; }
+  .toggle-switch .knob{
+    position:absolute; top:2px; left:2px;
+    width:16px; height:16px; border-radius:50%;
+    background:#fff;
+    transition: left .2s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,.4);
+  }
+  .toggle-switch.on .knob{ left: 18px; }
+
+  .connector-point{
+    position:absolute; left:50%; top:0;
+    width:6px; height:6px; margin-left:-3px; margin-top:-3px;
+    border-radius:50%;
+    background: rgba(255,255,255,.5);
+    box-shadow: 0 0 8px rgba(255,255,255,.6);
+  }
+  .rung:first-child .connector-point{ display:none; }
+
+  .base{
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--ink-dim);
+    letter-spacing:.15em;
+    display:flex; align-items:center; gap:6px;
+  }
+
+  footer{
+    position: fixed; bottom: 0; left:0; right:0;
+    display:flex; justify-content:center;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(11,14,28,0.95), transparent);
+    pointer-events:none;
+  }
+  .add-page-btn{
+    pointer-events:auto;
+    display:flex; align-items:center; gap:8px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    border:none;
+    background: linear-gradient(135deg, #f4c56a, #d480a0 70%, #8566c9);
+    color: #1b1430;
+    font-family:inherit; font-weight:700; font-size:14px;
+    cursor:pointer;
+    box-shadow: 0 8px 24px rgba(212,128,160,.35);
+    transition: transform .15s ease;
+  }
+  .add-page-btn:hover{ transform: translateY(-2px); }
+  .add-page-btn:active{ transform: translateY(0) scale(.97); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="star">✦</span>
+    <h1>目標の階段</h1>
+  </div>
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<main>
+  <div class="apex">★</div>
+  <div class="page-title" id="pageTitle" contenteditable="true" spellcheck="false"></div>
+  <div class="chain" id="chain"></div>
+  <div class="base">START ─ ここから積み上げよう</div>
+</main>
+
+<footer>
+  <button class="add-page-btn" id="addPageFooter">＋ 新しいページを追加</button>
+</footer>
+
+<script>
+  const STEP_COUNT = 7;
+  const DEFAULT_COLORS = ["#f4c56a", "#f0a96b", "#e88f86", "#d480a0", "#b072b8", "#8566c9", "#5c5ad1"];
+  const PALETTE_CHOICES = ["#f4c56a","#f0a96b","#e88f86","#d480a0","#b072b8","#8566c9","#5c5ad1",
+                            "#6ec6a8","#5ac8fa","#ff6b81","#c0c0c0","#ffffff"];
+  const BASE_MAX_CHARS = 60;   // characters allowed at size = 1
+  const MIN_SIZE = 0.5, MAX_SIZE = 1.8;
+  const MIN_FONT = 9, MAX_FONT = 24;
+
+  let pages = [];
+  let activePage = 0;
+  let pageIdCounter = 0;
+  let openPaletteIndex = null;
+  let scrollSaveTimer = null;
+
+  const STORAGE_KEY = 'goalChainData_v1';
+
+  function maxCharsFor(size){
+    return Math.max(6, Math.round(BASE_MAX_CHARS * size * size));
+  }
+
+  function makePage(){
+    pageIdCounter++;
+    return {
+      id: pageIdCounter,
+      name: "ページ " + pageIdCounter,
+      diamonds: Array.from({length: STEP_COUNT}, (_, i) => ({
+        text: "",
+        color: DEFAULT_COLORS[i],
+        size: 1,
+        fontSize: 13,
+        vertical: false,
+        scrollTop: 0
+      }))
+    };
+  }
+
+  function saveState(){
+    try{
+      const data = { pages, activePage, pageIdCounter };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }catch(e){
+      console.warn('保存できませんでした', e);
+    }
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return false;
+      const data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.pages) || data.pages.length === 0) return false;
+      pages = data.pages;
+      activePage = Math.min(data.activePage || 0, pages.length - 1);
+      pageIdCounter = data.pageIdCounter || pages.length;
+      return true;
+    }catch(e){
+      console.warn('読み込みに失敗しました', e);
+      return false;
+    }
+  }
+
+  function init(){
+    const loaded = loadState();
+    if (!loaded){
+      pages.push(makePage());
+    }
+    render();
+  }
+
+  function render(){
+    renderTabs();
+    renderChain();
+  }
+
+  function renderTabs(){
+    const tabsEl = document.getElementById('tabs');
+    tabsEl.innerHTML = "";
+    pages.forEach((p, idx) => {
+      const tab = document.createElement('div');
+      tab.className = 'tab' + (idx === activePage ? ' active' : '');
+      tab.innerHTML = `<span>${escapeHtml(p.name)}</span>` +
+        (pages.length > 1 ? `<span class="close" data-idx="${idx}">×</span>` : '');
+      tab.addEventListener('click', (e) => {
+        if (e.target.classList.contains('close')){
+          e.stopPropagation();
+          removePage(idx);
+          return;
+        }
+        activePage = idx;
+        saveState();
+        render();
+      });
+      tabsEl.appendChild(tab);
+    });
+    const addBtn = document.createElement('div');
+    addBtn.className = 'tab-add';
+    addBtn.textContent = '＋';
+    addBtn.addEventListener('click', addPage);
+    tabsEl.appendChild(addBtn);
+  }
+
+  function renderChain(){
+    const page = pages[activePage];
+    const titleEl = document.getElementById('pageTitle');
+    titleEl.textContent = page.name;
+    titleEl.oninput = () => {
+      page.name = titleEl.textContent.trim() || page.name;
+      renderTabs();
+      saveState();
+    };
+
+    const chainEl = document.getElementById('chain');
+    chainEl.innerHTML = "";
+
+    page.diamonds.forEach((d, i) => {
+      const rung = document.createElement('div');
+      rung.className = 'rung';
+      rung.style.setProperty('--dsize', d.size);
+
+      const connector = document.createElement('div');
+      connector.className = 'connector-point';
+      rung.appendChild(connector);
+
+      const diamond = document.createElement('div');
+      diamond.className = 'diamond';
+      diamond.style.setProperty('--dcolor', d.color);
+
+      const inner = document.createElement('div');
+      inner.className = 'diamond-inner';
+
+      const label = document.createElement('div');
+      label.className = 'step-label';
+      label.textContent = 'STEP ' + (i + 1);
+
+      const text = document.createElement('div');
+      text.className = 'goal-text';
+      text.contentEditable = "true";
+      text.spellcheck = false;
+      text.setAttribute('data-placeholder', '目標を入力…');
+      text.setAttribute('data-idx', i);
+      text.textContent = d.text;
+      if (!d.fontSize) d.fontSize = 13;
+      if (typeof d.scrollTop !== 'number') d.scrollTop = 0;
+      text.style.fontSize = d.fontSize + 'px';
+      if (d.vertical) text.classList.add('vertical');
+
+      text.addEventListener('scroll', () => {
+        d.scrollTop = d.vertical ? text.scrollLeft : text.scrollTop;
+        clearTimeout(scrollSaveTimer);
+        scrollSaveTimer = setTimeout(saveState, 400);
+      });
+
+      const counter = document.createElement('div');
+      counter.className = 'char-count';
+
+      function refreshCounter(){
+        const max = maxCharsFor(d.size);
+        counter.textContent = d.text.length + ' / ' + max;
+        counter.classList.toggle('near-limit', d.text.length >= max);
+      }
+
+      text.addEventListener('input', () => {
+        const max = maxCharsFor(d.size);
+        if (text.textContent.length > max){
+          text.textContent = text.textContent.slice(0, max);
+          placeCaretAtEnd(text);
+        }
+        d.text = text.textContent;
+        refreshCounter();
+        saveState();
+      });
+
+      refreshCounter();
+
+      inner.appendChild(label);
+      inner.appendChild(text);
+      inner.appendChild(counter);
+      diamond.appendChild(inner);
+      rung.appendChild(diamond);
+
+      const swatchBtn = document.createElement('button');
+      swatchBtn.className = 'swatch-btn';
+      swatchBtn.style.setProperty('--dcolor', d.color);
+      swatchBtn.title = '色・サイズを変える';
+      swatchBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        togglePalette(i);
+      });
+      rung.appendChild(swatchBtn);
+
+      const palette = document.createElement('div');
+      palette.className = 'palette';
+      palette.id = 'palette-' + i;
+      palette.addEventListener('click', (e) => e.stopPropagation());
+
+      const colorLabel = document.createElement('div');
+      colorLabel.className = 'row-label';
+      colorLabel.textContent = '色';
+      palette.appendChild(colorLabel);
+
+      const dotsRow = document.createElement('div');
+      dotsRow.className = 'dots';
+      PALETTE_CHOICES.forEach(c => {
+        const dot = document.createElement('div');
+        dot.className = 'dot';
+        dot.style.background = c;
+        dot.addEventListener('click', () => {
+          d.color = c;
+          diamond.style.setProperty('--dcolor', c);
+          swatchBtn.style.setProperty('--dcolor', c);
+          saveState();
+        });
+        dotsRow.appendChild(dot);
+      });
+      const customInput = document.createElement('input');
+      customInput.type = 'color';
+      customInput.value = d.color.length === 7 ? d.color : '#8566c9';
+      customInput.addEventListener('input', () => {
+        d.color = customInput.value;
+        diamond.style.setProperty('--dcolor', d.color);
+        swatchBtn.style.setProperty('--dcolor', d.color);
+        saveState();
+      });
+      dotsRow.appendChild(customInput);
+      palette.appendChild(dotsRow);
+
+      const sizeRow = document.createElement('div');
+      sizeRow.className = 'size-row';
+      const sizeLabel = document.createElement('div');
+      sizeLabel.className = 'row-label';
+      sizeLabel.textContent = 'サイズ';
+      const sizeSlider = document.createElement('input');
+      sizeSlider.type = 'range';
+      sizeSlider.min = MIN_SIZE;
+      sizeSlider.max = MAX_SIZE;
+      sizeSlider.step = 0.05;
+      sizeSlider.value = d.size;
+      const sizeValue = document.createElement('div');
+      sizeValue.className = 'size-value';
+      sizeValue.textContent = Math.round(d.size * 100) + '%';
+
+      sizeSlider.addEventListener('input', () => {
+        d.size = parseFloat(sizeSlider.value);
+        rung.style.setProperty('--dsize', d.size);
+        sizeValue.textContent = Math.round(d.size * 100) + '%';
+        const max = maxCharsFor(d.size);
+        if (d.text.length > max){
+          d.text = d.text.slice(0, max);
+          text.textContent = d.text;
+        }
+        refreshCounter();
+        saveState();
+      });
+
+      sizeRow.appendChild(sizeLabel);
+      sizeRow.appendChild(sizeSlider);
+      sizeRow.appendChild(sizeValue);
+      palette.appendChild(sizeRow);
+
+      const fontRow = document.createElement('div');
+      fontRow.className = 'size-row';
+      const fontLabel = document.createElement('div');
+      fontLabel.className = 'row-label';
+      fontLabel.textContent = '文字サイズ';
+      const fontSlider = document.createElement('input');
+      fontSlider.type = 'range';
+      fontSlider.min = MIN_FONT;
+      fontSlider.max = MAX_FONT;
+      fontSlider.step = 1;
+      fontSlider.value = d.fontSize;
+      const fontValue = document.createElement('div');
+      fontValue.className = 'size-value';
+      fontValue.textContent = d.fontSize + 'px';
+
+      fontSlider.addEventListener('input', () => {
+        d.fontSize = parseInt(fontSlider.value, 10);
+        text.style.fontSize = d.fontSize + 'px';
+        fontValue.textContent = d.fontSize + 'px';
+        saveState();
+      });
+
+      fontRow.appendChild(fontLabel);
+      fontRow.appendChild(fontSlider);
+      fontRow.appendChild(fontValue);
+      palette.appendChild(fontRow);
+
+      const vertRow = document.createElement('div');
+      vertRow.className = 'toggle-row';
+      const vertLabel = document.createElement('div');
+      vertLabel.className = 'row-label';
+      vertLabel.style.marginBottom = '0';
+      vertLabel.textContent = '縦書き';
+      const vertToggle = document.createElement('div');
+      vertToggle.className = 'toggle-switch' + (d.vertical ? ' on' : '');
+      const knob = document.createElement('div');
+      knob.className = 'knob';
+      vertToggle.appendChild(knob);
+      vertToggle.addEventListener('click', () => {
+        d.vertical = !d.vertical;
+        vertToggle.classList.toggle('on', d.vertical);
+        text.classList.toggle('vertical', d.vertical);
+        saveState();
+      });
+      vertRow.appendChild(vertLabel);
+      vertRow.appendChild(vertToggle);
+      palette.appendChild(vertRow);
+
+      rung.appendChild(palette);
+      chainEl.appendChild(rung);
+    });
+
+    if (openPaletteIndex !== null){
+      const p = document.getElementById('palette-' + openPaletteIndex);
+      if (p) p.classList.add('open');
+    }
+
+    requestAnimationFrame(() => {
+      page.diamonds.forEach((dd, ii) => {
+        if (!dd.scrollTop) return;
+        const el = chainEl.querySelector('.goal-text[data-idx="' + ii + '"]');
+        if (!el) return;
+        if (dd.vertical) el.scrollLeft = dd.scrollTop;
+        else el.scrollTop = dd.scrollTop;
+      });
+    });
+  }
+
+  function placeCaretAtEnd(el){
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function togglePalette(i){
+    const target = document.getElementById('palette-' + i);
+    if (openPaletteIndex === i){
+      closePalette();
+      return;
+    }
+    document.querySelectorAll('.palette.open').forEach(p => p.classList.remove('open'));
+    openPaletteIndex = i;
+    if (target) target.classList.add('open');
+  }
+  function closePalette(){
+    openPaletteIndex = null;
+    document.querySelectorAll('.palette.open').forEach(p => p.classList.remove('open'));
+  }
+  document.addEventListener('click', closePalette);
+
+  function addPage(){
+    pages.push(makePage());
+    activePage = pages.length - 1;
+    saveState();
+    render();
+  }
+  document.getElementById('addPageFooter').addEventListener('click', addPage);
+
+  function removePage(idx){
+    if (pages.length <= 1) return;
+    pages.splice(idx, 1);
+    if (activePage >= pages.length) activePage = pages.length - 1;
+    else if (activePage > idx) activePage--;
+    saveState();
+    render();
+  }
+
+  function escapeHtml(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  window.addEventListener('pagehide', saveState);
+  window.addEventListener('beforeunload', saveState);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveState();
+  });
+
+  init();
+</script>
+</body>
+</html>
